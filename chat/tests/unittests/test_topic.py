@@ -1,6 +1,10 @@
 from django.test import TestCase
 from chat.models import Topic
+from chat.serializers import TopicSerializer
 from django.core.exceptions import ValidationError
+from unittest import mock
+import datetime
+import pytz
 
 
 class TopicModelTest(TestCase):
@@ -43,3 +47,24 @@ class TopicModelTest(TestCase):
         second_topic.save()
         second_topic.full_clean() # should not raise ValidationError
         self.assertEqual(second_topic.title, 'Interesting world')
+
+
+class TopicSerializerTest(TestCase):
+
+    def setUp(self) -> None:
+
+        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+        self.topic_attr = {'id': 1, 'title': 'What is the weather like?'}
+        self.topic_serialized = {'id': 1, 'title': 'What is the weather like?', 'created_at': '2020-01-01T00:00:00Z'}
+        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
+            self.topic = Topic.objects.create(**self.topic_attr)
+        self.serializer = TopicSerializer(instance=self.topic)
+
+    def test_contains_expected_fields(self):
+
+        data = self.serializer.data
+        self.assertCountEqual(data.keys(), ['id', 'title', 'created_at'])
+
+    def test_contains_correct_data(self):
+        self.assertEqual(self.serializer.data, self.topic_serialized)
+
