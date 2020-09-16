@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.db.utils import IntegrityError
 from chat.models import Topic, Message
 from chat.serializers import MessageSerializer
+from chatting.settings import REST_FRAMEWORK
 from unittest import mock
 import datetime
 import pytz
@@ -53,7 +54,7 @@ class MessageSerializerTest(TestCase):
         self.topic = Topic.objects.create(**self.topic_attr)
 
         self.message_attr = {'id': 1, 'text': 'Its sunny day', 'topic': self.topic}
-        self.message_serialized = {'id': 1, 'text': 'Its sunny day', 'topic': self.topic.id, 'created_at': '2020-01-01T00:00:00Z'}
+        self.message_serialized = {'id': 1, 'text': 'Its sunny day', 'topic': self.topic.id, 'created_at': date_to_mock.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])}
         with mock.patch('django.utils.timezone.now', mock.Mock(return_value=date_to_mock)):
             self.message = Message.objects.create(**self.message_attr)
 

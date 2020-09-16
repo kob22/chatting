@@ -71,7 +71,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chatting.wsgi.application'
 
-
+REST_FRAMEWORK = {
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
+}
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 

@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIRequestFactory
+from chatting.settings import REST_FRAMEWORK
 from rest_framework import status
 from chat.models import Topic
 from chat.views import TopicViewSet
@@ -32,7 +33,7 @@ class TopicViewsALLTests(TestCase):
             for topic in self.topics:
                 Topic.objects.create(**topic)
                 temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
+                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
                 self.topics_data.append(temp_topic)
 
         factory = APIRequestFactory()
@@ -71,7 +72,7 @@ class TopicViewsGetDetailTests(TestCase):
             for topic in self.topics:
                 Topic.objects.create(**topic)
                 temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
+                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
                 self.topics_data.append(temp_topic)
 
         factory = APIRequestFactory()
@@ -101,7 +102,7 @@ class TopicViewsCreateTopics(TestCase):
             response.render()
 
             temp_topic = self.topic
-            temp_topic['created_at'] = '2020-01-01T00:00:00Z'
+            temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
             self.topic_data = temp_topic
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -121,7 +122,7 @@ class TopicViewsCreateTopics(TestCase):
             response.render()
 
             temp_topic = self.topic
-            temp_topic['created_at'] = '2020-01-01T00:00:00Z'
+            temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
             self.topic_data = temp_topic
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -140,10 +141,6 @@ class TopicViewsCreateTopics(TestCase):
             response = topic_view(request)
             response.render()
 
-            temp_topic = self.topic
-            temp_topic['created_at'] = '2020-01-01T00:00:00Z'
-            self.topic_data = temp_topic
-
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(json.loads(response.content),  {'title': ['Ensure this field has at least 5 characters.']})
         self.assertEqual(response['content-type'], 'application/json')
@@ -159,10 +156,6 @@ class TopicViewsCreateTopics(TestCase):
             request = factory.post(reverse('topics-list'), self.topic)
             response = topic_view(request)
             response.render()
-
-            temp_topic = self.topic
-            temp_topic['created_at'] = '2020-01-01T00:00:00Z'
-            self.topic_data = temp_topic
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(json.loads(response.content),  {'title': ['Ensure this field has no more than 255 characters.']})
@@ -192,7 +185,7 @@ class TopicViewsUpdateTopics(TestCase):
             for topic in self.topics:
                 Topic.objects.create(**topic)
                 temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
+                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
                 self.topics_data.append(temp_topic)
 
         self.topics[2]['title'] = 'New the best title'
@@ -215,13 +208,10 @@ class TopicViewsUpdateTopics(TestCase):
                        {'id': 2, 'title': 'The Most Popular Color in the World'},
                        {'id': 3, 'title': 'The best programming language'},
                        {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
+
         with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
             for topic in self.topics:
                 Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
-                self.topics_data.append(temp_topic)
 
         self.topics[2]['title'] = 'T' * 4
 
@@ -243,13 +233,11 @@ class TopicViewsUpdateTopics(TestCase):
                        {'id': 2, 'title': 'The Most Popular Color in the World'},
                        {'id': 3, 'title': 'The best programming language'},
                        {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
+
         with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
             for topic in self.topics:
                 Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
-                self.topics_data.append(temp_topic)
+
 
         self.topics[2]['title'] = 'T' * 256
 
@@ -276,7 +264,7 @@ class TopicViewsUpdateTopics(TestCase):
             for topic in self.topics:
                 Topic.objects.create(**topic)
                 temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
+                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
                 self.topics_data.append(temp_topic)
 
         self.topics[2]['title'] = '10 Best Programming Language to Learn in 2020'
@@ -310,13 +298,10 @@ class TopicViewsDeleteTopics(TestCase):
         mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
                        {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
+
         with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
             for topic in self.topics:
                 Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = '2020-01-01T00:00:00Z'
-                self.topics_data.append(temp_topic)
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view({'delete': 'destroy'})
