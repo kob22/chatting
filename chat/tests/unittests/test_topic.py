@@ -13,6 +13,22 @@ class TopicModelTest(TestCase):
         topic = Topic(title='Topic title')
         self.assertEqual(topic.title, 'Topic title')
 
+    def test_topic_has_all_fields(self):
+        date_to_mock = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+
+        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=date_to_mock)):
+            topic = Topic(id=1, title='Topic title')
+            topic.save()
+            topic.full_clean()
+
+        self.assertEqual(topic.id, 1)
+
+        self.assertTrue(isinstance(topic.title, str))
+        self.assertTrue(isinstance(topic.created_at, datetime.datetime))
+
+        self.assertEqual(topic.title, 'Topic title')
+        self.assertEqual(topic.created_at, date_to_mock)
+
     def test_too_short_title(self):
         topic = Topic(title='W'*4)
         with self.assertRaises(ValidationError):

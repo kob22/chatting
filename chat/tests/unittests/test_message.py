@@ -37,6 +37,8 @@ class MessageModelTest(TestCase):
 
         self.assertTrue(isinstance(msg.text, str))
         self.assertTrue(isinstance(msg.created_at, datetime.datetime))
+        self.assertTrue(isinstance(msg.topic, Topic))
 
         self.assertEqual(msg.text, 'Typical message')
         self.assertEqual(msg.created_at, date_to_mock)
+        self.assertEqual(msg.topic, self.topic)
