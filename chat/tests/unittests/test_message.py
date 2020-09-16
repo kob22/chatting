@@ -42,3 +42,27 @@ class MessageModelTest(TestCase):
         self.assertEqual(msg.text, 'Typical message')
         self.assertEqual(msg.created_at, date_to_mock)
         self.assertEqual(msg.topic, self.topic)
+
+
+class MessageSerializerTest(TestCase):
+
+    def setUp(self) -> None:
+
+        date_to_mock = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+        self.topic_attr = {'id': 1, 'title': 'What is the weather like?'}
+        self.topic = Topic.objects.create(**self.topic_attr)
+
+        self.message_attr = {'id': 1, 'text': 'Its sunny day', 'topic': self.topic}
+        self.message_serialized = {'id': 1, 'title': 'Its sunny day', 'topic': self.topic.id, 'created_at': date_to_mock}
+        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=date_to_mock)):
+            self.message_attr = Message.objects.create(**self.message_attr)
+
+        self.serializer = MessageSerializer(instance=self.topic)
+
+    def test_contains_expected_fields(self):
+
+        data = self.serializer.data
+        self.assertCountEqual(data.keys(), ['id', 'text', 'topic', 'created_at'])
+
+    def test_contains_correct_data(self):
+        self.assertEqual(self.serializer.data, self.message_serialized)
