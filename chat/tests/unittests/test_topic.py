@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from chat.models import Topic
 from chat.serializers import TopicSerializer
 from unittest import mock
+
 import datetime
 import pytz
 
