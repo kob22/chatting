@@ -1,7 +1,7 @@
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 from chat.models import Topic
 from chat.serializers import TopicSerializer
-from django.core.exceptions import ValidationError
 from unittest import mock
 import datetime
 import pytz
@@ -67,4 +67,3 @@ class TopicSerializerTest(TestCase):
 
     def test_contains_correct_data(self):
         self.assertEqual(self.serializer.data, self.topic_serialized)
-
