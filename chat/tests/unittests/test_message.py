@@ -26,6 +26,22 @@ class MessageModelTest(TestCase):
             msg.save()
             msg.full_clean()
 
+    def test_create_message_with_nontopic_instance(self):
+
+        with self.assertRaises(ValueError):
+            msg = Message(text='Typical message', topic=2)
+            msg.save()
+            msg.full_clean()
+
+    def test_create_message_with_nonsaved_topic_instance(self):
+        self.topic = Topic()
+
+        with self.assertRaises(ValueError):
+            msg = Message(text='Typical message', topic=self.topic)
+            msg.save()
+            msg.full_clean()
+
+
     def test_message_has_all_fields(self):
         date_to_mock = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
 
