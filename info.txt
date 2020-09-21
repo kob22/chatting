@@ -1,2 +1,4 @@
 DRF accepts create requests with too many arguments
 Topic created_at data doesn't change after update
+Lock topic id in updating a message
+Change defualt messages, for example creating message without topic id

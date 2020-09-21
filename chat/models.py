@@ -8,7 +8,7 @@ class Topic(models.Model):
 
 
 class Message(models.Model):
-    text = models.TextField()
+    text = models.TextField(validators=[MinLengthValidator(10)])
     created_at = models.DateTimeField(auto_now_add=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)
 

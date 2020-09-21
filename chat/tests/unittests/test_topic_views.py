@@ -238,7 +238,6 @@ class TopicViewsUpdateTopics(TestCase):
             for topic in self.topics:
                 Topic.objects.create(**topic)
 
-
         self.topics[2]['title'] = 'T' * 256
 
         factory = APIRequestFactory()
@@ -279,6 +278,7 @@ class TopicViewsUpdateTopics(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content), self.topics[2])
         self.assertEqual(response['content-type'], 'application/json')
+
 
 class TopicViewsDeleteTopics(TestCase):
 

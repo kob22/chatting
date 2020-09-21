@@ -20,6 +20,7 @@ from chat import views as chat_views
 
 router = routers.DefaultRouter()
 router.register(r'topics', chat_views.TopicViewSet, basename='topics')
+router.register(r'messages', chat_views.MessageViewSet, basename='messages')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
