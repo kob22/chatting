@@ -97,3 +97,22 @@ class MessageSerializerTest(TestCase):
 
     def test_contains_correct_data(self):
         self.assertEqual(self.serializer.data, self.message_serialized)
+
+    def test_cant_update_message_topic(self):
+        new_topic_attr = {'id': 2, 'title': 'Best color'}
+        new_topic = Topic.objects.create(**new_topic_attr)
+
+        serializer = MessageSerializer(self.message, data={'topic': new_topic.id}, partial=True)
+
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors, {'topic': ['Cannot update message topic']})
+
+    def test_update_message(self):
+
+        serializer = MessageSerializer(self.message, data={'text': 'Updated message'}, partial=True)
+
+        self.assertTrue(serializer.is_valid())
+        serializer.save()
+
+        msg = Message.objects.get(id=serializer.data['id'])
+        self.assertEqual(msg.text, 'Updated message')
