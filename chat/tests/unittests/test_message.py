@@ -41,6 +41,20 @@ class MessageModelTest(TestCase):
             msg.save()
             msg.full_clean()
 
+    def test_update_message_cannot_change_topic(self):
+
+        msg = Message(text='Typical message', topic=self.topic)
+        msg.save()
+        msg.full_clean()
+
+        self.another_topic = Topic(title='Best Topic ever')
+        self.another_topic.save()
+        self.another_topic.full_clean()
+
+        with self.assertRaisesMessage(ValueError, 'You cannot change the topic of the message'):
+            msg.topic = self.another_topic
+            msg.save()
+            msg.full_clean()
 
     def test_message_has_all_fields(self):
         date_to_mock = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
