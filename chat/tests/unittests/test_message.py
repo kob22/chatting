@@ -74,6 +74,19 @@ class MessageModelTest(TestCase):
         self.assertEqual(msg.created_at, date_to_mock)
         self.assertEqual(msg.topic, self.topic)
 
+    def test_delete_topics_removes_all_messages(self):
+
+        for id in range(1,5):
+            msg = Message(id=id, text=f'Typical message number{id}', topic=self.topic)
+            msg.save()
+            msg.full_clean()
+
+        self.assertEquals(4,len(Message.objects.filter(topic=self.topic)))
+
+        self.topic.delete()
+
+        self.assertEquals(0, len(Message.objects.filter(topic=self.topic)))
+
 
 class MessageSerializerTest(TestCase):
 

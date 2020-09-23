@@ -310,7 +310,7 @@ class MessageViewsDeleteMessages(TestCase):
         self.assertEqual(json.loads(response.content), {'detail': 'Not found.'})
         self.assertEqual(response['content-type'], 'application/json')
 
-    def test_delete_existing_topic(self):
+    def test_delete_existing_message(self):
 
         self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
                        {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
