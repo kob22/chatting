@@ -1,6 +1,7 @@
-from .models import Topic, Message
-from rest_framework import serializers
 from django.core.exceptions import ValidationError
+from rest_framework import serializers
+
+from .models import Topic, Message
 
 
 class TopicSerializer(serializers.ModelSerializer):

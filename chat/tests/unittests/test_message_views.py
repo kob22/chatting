@@ -1,22 +1,24 @@
+import datetime
+import json
+from unittest import mock
+
+import pytz
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIRequestFactory
-from chatting.settings import REST_FRAMEWORK
-from chat.serializers import MessageSerializer
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
+
 from chat.models import Topic, Message
+from chat.serializers import MessageSerializer
 from chat.views import MessageViewSet
-from unittest import mock
-import json
-import datetime
-import pytz
+from chatting.settings import REST_FRAMEWORK
 
 
 def create_topics_obj():
     topics = [{'id': 1, 'title': 'What is the weather like?'},
-                   {'id': 2, 'title': 'The Most Popular Color in the World'},
-                   {'id': 3, 'title': 'The best programming language'},
-                   {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
+              {'id': 2, 'title': 'The Most Popular Color in the World'},
+              {'id': 3, 'title': 'The best programming language'},
+              {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
     topics_saved = []
     for topic in topics:
         topics_saved.append(Topic.objects.create(**topic))
@@ -26,11 +28,11 @@ def create_topics_obj():
 
 def create_messages_dictionary(topics_objects):
     messages = [{'id': 1, 'text': "Hot and sunny day", 'topic': topics_objects[0]},
-                     {'id': 2, 'text': "Blue", 'topic': topics_objects[1]},
-                     {'id': 3, 'text': "Python", 'topic': topics_objects[2]},
-                     {'id': 4, 'text': "Python and JavaScript", 'topic': topics_objects[3]},
-                     {'id': 5, 'text': "Cold and snow", 'topic': topics_objects[0]},
-                     {'id': 6, 'text': "Rainstorm", 'topic': topics_objects[0]}]
+                {'id': 2, 'text': "Blue", 'topic': topics_objects[1]},
+                {'id': 3, 'text': "Python", 'topic': topics_objects[2]},
+                {'id': 4, 'text': "Python and JavaScript", 'topic': topics_objects[3]},
+                {'id': 5, 'text': "Cold and snow", 'topic': topics_objects[0]},
+                {'id': 6, 'text': "Rainstorm", 'topic': topics_objects[0]}]
     return messages
 
 
@@ -64,7 +66,6 @@ class MessageViewsALLTest(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_all_messages(self):
-
         self.messages = create_messages_dictionary(self.topics_saved)
         self.messages_saved = create_messages_objects(self.messages)
 
@@ -96,7 +97,6 @@ class MessageViewsDetailsTest(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_existing_message(self):
-
         self.message = {'id': 1, 'text': "Hot and sunny day", 'topic': self.topics_saved[0]}
         self.message_saved = Message.objects.create(**self.message)
 
@@ -117,7 +117,6 @@ class MessageViewsCreateTest(TestCase):
         self.topics_saved = create_topics_obj()
 
     def test_view_create_message_with_correct_data(self):
-
         mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         self.message = {'id': 1, 'text': "Hot and sunny day", 'topic': 1}
 
@@ -135,9 +134,8 @@ class MessageViewsCreateTest(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_create_message_with_too_short_text(self):
-
         mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.message = {'id': 1, 'text': "H"*9, 'topic': 1}
+        self.message = {'id': 1, 'text': "H" * 9, 'topic': 1}
 
         factory = APIRequestFactory()
         message_view = MessageViewSet.as_view(actions={'post': 'create'})
@@ -149,11 +147,11 @@ class MessageViewsCreateTest(TestCase):
             self.message['created_at'] = mocked_date.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(json.loads(response.content), {'text': ['Ensure this value has at least 10 characters (it has 9).']})
+        self.assertEqual(json.loads(response.content),
+                         {'text': ['Ensure this value has at least 10 characters (it has 9).']})
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_create_message_with_additiona_attr(self):
-
         mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         self.message = {'id': 1, 'text': "Hot and sunny day", 'topic': 1, 'additional_attr': 'value'}
 
@@ -173,7 +171,6 @@ class MessageViewsCreateTest(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_create_message_without_topic_id(self):
-
         mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         self.message = {'id': 1, 'text': "Hot and sunny day"}
 
@@ -191,7 +188,6 @@ class MessageViewsCreateTest(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_create_message_with_incorrect_topic_id(self):
-
         mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         self.message = {'id': 1, 'text': "Hot and sunny day", 'topic': 22}
 
@@ -205,7 +201,8 @@ class MessageViewsCreateTest(TestCase):
             self.message['created_at'] = mocked_date.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(json.loads(response.content), {'topic': [f"Invalid pk \"{self.message['topic']}\" - object does not exist."]})
+        self.assertEqual(json.loads(response.content),
+                         {'topic': [f"Invalid pk \"{self.message['topic']}\" - object does not exist."]})
         self.assertEqual(response['content-type'], 'application/json')
 
 
@@ -218,7 +215,6 @@ class MessagesViewsUpdateMessage(TestCase):
         self.messages_saved = create_messages_objects(self.messages)
 
     def test_update_message_text(self):
-
         # create messages to update and change Topics object to id
         new_text = 'The worst weather ever'
 
@@ -239,9 +235,8 @@ class MessagesViewsUpdateMessage(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_update_message_with_too_short_text(self):
-
         # create messages to update and change Topics object to id
-        new_text = 'H'*9
+        new_text = 'H' * 9
 
         msg_after_update = dict(MessageSerializer(instance=self.messages_saved[0]).data)
         msg_after_update['text'] = new_text
@@ -256,11 +251,11 @@ class MessagesViewsUpdateMessage(TestCase):
         response.render()
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(json.loads(response.content), {'text': ['Ensure this value has at least 10 characters (it has 9).']})
+        self.assertEqual(json.loads(response.content),
+                         {'text': ['Ensure this value has at least 10 characters (it has 9).']})
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_update_message_text_with_additionals_attr(self):
-
         # create messages to update and change Topics object to id
         new_text = 'The worst weather ever'
 
@@ -282,7 +277,6 @@ class MessagesViewsUpdateMessage(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_views_cant_update_message_topic(self):
-
         msg_after_update = dict(MessageSerializer(instance=self.messages_saved[0]).data)
         msg_after_update['topic'] = 2
 
@@ -314,7 +308,6 @@ class MessageViewsDeleteMessages(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_delete_existing_message(self):
-
         self.topics_saved = create_topics_obj()
         self.messages = create_messages_dictionary(self.topics_saved)
         self.messages_saved = create_messages_objects(self.messages)

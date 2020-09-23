@@ -1,6 +1,7 @@
-from django.db import models
-from django.core.validators import MinLengthValidator
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import MinLengthValidator
+from django.db import models
+
 
 class Topic(models.Model):
     title = models.CharField(max_length=255, validators=[MinLengthValidator(5)])
@@ -20,6 +21,6 @@ class Message(models.Model):
                 msg = None
             if msg is not None:
                 if msg.topic.id != self.topic.id:
-                    raise(ValueError('You cannot change the topic of the message'))
+                    raise (ValueError('You cannot change the topic of the message'))
 
         super(Message, self).save(*args, **kwargs)
