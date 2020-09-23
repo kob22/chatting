@@ -1,14 +1,36 @@
+import datetime
+import json
+from unittest import mock
+
+import pytz
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIRequestFactory
-from chatting.settings import REST_FRAMEWORK
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
+
 from chat.models import Topic
+from chat.serializers import TopicSerializer
 from chat.views import TopicViewSet
-from unittest import mock
-import json
-import datetime
-import pytz
+from chatting.settings import REST_FRAMEWORK
+
+
+def create_topics_attr():
+    topics = [{'id': 1, 'title': 'What is the weather like?'},
+              {'id': 2, 'title': 'The Most Popular Color in the World'},
+              {'id': 3, 'title': 'The best programming language'},
+              {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
+    return topics
+
+
+def create_topics_objects(topics):
+    mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+
+    topics_obj = []
+    with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
+        for topic in topics:
+            topics_obj.append(Topic.objects.create(**topic))
+
+    return topics_obj
 
 
 class TopicViewsALLTests(TestCase):
@@ -25,16 +47,8 @@ class TopicViewsALLTests(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_with_some_topics(self):
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
-                self.topics_data.append(temp_topic)
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view({'get': 'list'})
@@ -43,14 +57,13 @@ class TopicViewsALLTests(TestCase):
         response.render()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), self.topics)
+        self.assertEqual(json.loads(response.content), TopicSerializer(self.topics_data, many=True).data)
         self.assertEqual(response['content-type'], 'application/json')
 
 
 class TopicViewsGetDetailTests(TestCase):
 
     def test_get_details_nonexisting_topic(self):
-
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view(actions={'get': 'retrieve'})
 
@@ -63,17 +76,8 @@ class TopicViewsGetDetailTests(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_get_details_existing_topic(self):
-
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
-                self.topics_data.append(temp_topic)
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view(actions={'get': 'retrieve'})
@@ -83,7 +87,7 @@ class TopicViewsGetDetailTests(TestCase):
         response.render()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), self.topics_data[2])
+        self.assertEqual(json.loads(response.content), TopicSerializer(self.topics_data[2]).data)
         self.assertEqual(response['content-type'], 'application/json')
 
 
@@ -131,7 +135,7 @@ class TopicViewsCreateTopics(TestCase):
 
     def test_create_topic_with_too_short_title(self):
         mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topic = {'id': 1, 'title': 'W'*4}
+        self.topic = {'id': 1, 'title': 'W' * 4}
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view(actions={'post': 'create'})
@@ -142,12 +146,12 @@ class TopicViewsCreateTopics(TestCase):
             response.render()
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(json.loads(response.content),  {'title': ['Ensure this field has at least 5 characters.']})
+        self.assertEqual(json.loads(response.content), {'title': ['Ensure this field has at least 5 characters.']})
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_create_topic_with_too_long_title(self):
         mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topic = {'id': 1, 'title': 'W'*256}
+        self.topic = {'id': 1, 'title': 'W' * 256}
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view(actions={'post': 'create'})
@@ -158,7 +162,8 @@ class TopicViewsCreateTopics(TestCase):
             response.render()
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(json.loads(response.content),  {'title': ['Ensure this field has no more than 255 characters.']})
+        self.assertEqual(json.loads(response.content),
+                         {'title': ['Ensure this field has no more than 255 characters.']})
         self.assertEqual(response['content-type'], 'application/json')
 
 
@@ -176,17 +181,10 @@ class TopicViewsUpdateTopics(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_update_existing_topic(self):
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         mocked_date_month_later = datetime.datetime(2020, 2, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
-                self.topics_data.append(temp_topic)
+
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         self.topics[2]['title'] = 'New the best title'
 
@@ -198,20 +196,13 @@ class TopicViewsUpdateTopics(TestCase):
             response.render()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), self.topics[2])
+        self.assertEqual(json.loads(response.content), TopicSerializer(Topic.objects.get(id=self.topics[2]['id'])).data)
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_update_existing_topic_with_too_short_title(self):
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         mocked_date_month_later = datetime.datetime(2020, 2, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'},
-                       {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'},
-                       {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         self.topics[2]['title'] = 'T' * 4
 
@@ -227,16 +218,10 @@ class TopicViewsUpdateTopics(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_update_existing_topic_with_too_long_title(self):
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         mocked_date_month_later = datetime.datetime(2020, 2, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'},
-                       {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'},
-                       {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
 
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         self.topics[2]['title'] = 'T' * 256
 
@@ -248,35 +233,28 @@ class TopicViewsUpdateTopics(TestCase):
             response.render()
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(json.loads(response.content), {'title': ['Ensure this field has no more than 255 characters.']})
+        self.assertEqual(json.loads(response.content),
+                         {'title': ['Ensure this field has no more than 255 characters.']})
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_update_existing_topic_with_too_many_attr(self):
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
         mocked_date_month_later = datetime.datetime(2020, 2, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'},
-                       {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'},
-                       {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_data = []
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
-                temp_topic = topic
-                temp_topic['created_at'] = mocked.strftime(REST_FRAMEWORK['DATETIME_FORMAT'])
-                self.topics_data.append(temp_topic)
+
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         self.topics[2]['title'] = '10 Best Programming Language to Learn in 2020'
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view({'put': 'update'})
         with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked_date_month_later)):
-            request = factory.put(reverse('topics-detail', args=(3,)), {'title': self.topics[2]['title'], 'additional': 'attr'})
+            request = factory.put(reverse('topics-detail', args=(3,)),
+                                  {'title': self.topics[2]['title'], 'additional': 'attr'})
             response = topic_view(request, pk=3)
             response.render()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), self.topics[2])
+        self.assertEqual(json.loads(response.content), TopicSerializer(Topic.objects.get(id=self.topics[2]['id'])).data)
         self.assertEqual(response['content-type'], 'application/json')
 
 
@@ -294,14 +272,8 @@ class TopicViewsDeleteTopics(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_delete_existing_topic(self):
-
-        mocked = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked)):
-            for topic in self.topics:
-                Topic.objects.create(**topic)
+        self.topics = create_topics_attr()
+        self.topics_data = create_topics_objects(self.topics)
 
         factory = APIRequestFactory()
         topic_view = TopicViewSet.as_view({'delete': 'destroy'})
