@@ -12,14 +12,44 @@ import datetime
 import pytz
 
 
+def create_topics_obj():
+    topics = [{'id': 1, 'title': 'What is the weather like?'},
+                   {'id': 2, 'title': 'The Most Popular Color in the World'},
+                   {'id': 3, 'title': 'The best programming language'},
+                   {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
+    topics_saved = []
+    for topic in topics:
+        topics_saved.append(Topic.objects.create(**topic))
+
+    return topics_saved
+
+
+def create_messages_dictionary(topics_objects):
+    messages = [{'id': 1, 'text': "Hot and sunny day", 'topic': topics_objects[0]},
+                     {'id': 2, 'text': "Blue", 'topic': topics_objects[1]},
+                     {'id': 3, 'text': "Python", 'topic': topics_objects[2]},
+                     {'id': 4, 'text': "Python and JavaScript", 'topic': topics_objects[3]},
+                     {'id': 5, 'text': "Cold and snow", 'topic': topics_objects[0]},
+                     {'id': 6, 'text': "Rainstorm", 'topic': topics_objects[0]}]
+    return messages
+
+
+def create_messages_objects(messages_attr):
+    mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+
+    messages_saved = []
+    with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked_date)):
+        for msg in messages_attr:
+            temp_msg = Message.objects.create(**msg)
+            messages_saved.append(temp_msg)
+
+    return messages_saved
+
+
 class MessageViewsALLTest(TestCase):
 
     def setUp(self) -> None:
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_saved = []
-        for topic in self.topics:
-            self.topics_saved.append(Topic.objects.create(**topic))
+        self.topics_saved = create_topics_obj()
 
     def test_view_empty_list_all_messages(self):
         """Test get all messages when there is no messages"""
@@ -34,16 +64,9 @@ class MessageViewsALLTest(TestCase):
         self.assertEqual(response['content-type'], 'application/json')
 
     def test_view_all_messages(self):
-        mocked_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
-        self.messages = [{'id': 1, 'text': "Hot and sunny day", 'topic': self.topics_saved[0]}, {'id': 2, 'text': "Blue", 'topic': self.topics_saved[1]},
-                         {'id': 3, 'text': "Python", 'topic': self.topics_saved[2]}, {'id': 4, 'text': "Python and JavaScript", 'topic': self.topics_saved[3]},
-                         {'id': 5, 'text': "Cold and snow", 'topic': self.topics_saved[0]}, {'id': 6, 'text': "Rainstorm", 'topic': self.topics_saved[0]}]
 
-        self.messages_saved = []
-        with mock.patch('django.utils.timezone.now', mock.Mock(return_value=mocked_date)):
-            for msg in self.messages:
-                temp_msg = Message.objects.create(**msg)
-                self.messages_saved.append(temp_msg)
+        self.messages = create_messages_dictionary(self.topics_saved)
+        self.messages_saved = create_messages_objects(self.messages)
 
         factory = APIRequestFactory()
         message_view = MessageViewSet.as_view({'get': 'list'})
@@ -59,11 +82,7 @@ class MessageViewsALLTest(TestCase):
 class MessageViewsDetailsTest(TestCase):
 
     def setUp(self) -> None:
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_saved = []
-        for topic in self.topics:
-            self.topics_saved.append(Topic.objects.create(**topic))
+        self.topics_saved = create_topics_obj()
 
     def test_view_nonexisting_message(self):
         factory = APIRequestFactory()
@@ -95,11 +114,7 @@ class MessageViewsDetailsTest(TestCase):
 class MessageViewsCreateTest(TestCase):
 
     def setUp(self) -> None:
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_saved = []
-        for topic in self.topics:
-            self.topics_saved.append(Topic.objects.create(**topic))
+        self.topics_saved = create_topics_obj()
 
     def test_view_create_message_with_correct_data(self):
 
@@ -197,23 +212,10 @@ class MessageViewsCreateTest(TestCase):
 class MessagesViewsUpdateMessage(TestCase):
 
     def setUp(self) -> None:
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_saved = []
-        for topic in self.topics:
-            self.topics_saved.append(Topic.objects.create(**topic))
+        self.topics_saved = create_topics_obj()
 
-        self.messages = [{'id': 1, 'text': "Hot and sunny day", 'topic': self.topics_saved[0]},
-                         {'id': 2, 'text': "Blue", 'topic': self.topics_saved[1]},
-                         {'id': 3, 'text': "Python", 'topic': self.topics_saved[2]},
-                         {'id': 4, 'text': "Python and JavaScript", 'topic': self.topics_saved[3]},
-                         {'id': 5, 'text': "Cold and snow", 'topic': self.topics_saved[0]},
-                         {'id': 6, 'text': "Rainstorm", 'topic': self.topics_saved[0]}]
-
-        self.messages_saved = []
-        for msg in self.messages:
-            temp_msg = Message.objects.create(**msg)
-            self.messages_saved.append(temp_msg)
+        self.messages = create_messages_dictionary(self.topics_saved)
+        self.messages_saved = create_messages_objects(self.messages)
 
     def test_update_message_text(self):
 
@@ -297,6 +299,7 @@ class MessagesViewsUpdateMessage(TestCase):
         self.assertEqual(json.loads(response.content), {'topic': ['Cannot update message topic']})
         self.assertEqual(response['content-type'], 'application/json')
 
+
 class MessageViewsDeleteMessages(TestCase):
 
     def test_delete_nonexisting_message(self):
@@ -312,20 +315,9 @@ class MessageViewsDeleteMessages(TestCase):
 
     def test_delete_existing_message(self):
 
-        self.topics = [{'id': 1, 'title': 'What is the weather like?'}, {'id': 2, 'title': 'The Most Popular Color in the World'},
-                       {'id': 3, 'title': 'The best programming language'}, {'id': 4, 'title': '10 Best Programming Language to Learn in 2020'}]
-        self.topics_saved = []
-        for topic in self.topics:
-            self.topics_saved.append(Topic.objects.create(**topic))
-
-        self.messages = [{'id': 1, 'text': "Hot and sunny day", 'topic': self.topics_saved[0]},
-                         {'id': 2, 'text': "Blue", 'topic': self.topics_saved[1]},
-                         {'id': 3, 'text': "Python", 'topic': self.topics_saved[2]}]
-
-        self.messages_saved = []
-        for msg in self.messages:
-            temp_msg = Message.objects.create(**msg)
-            self.messages_saved.append(temp_msg)
+        self.topics_saved = create_topics_obj()
+        self.messages = create_messages_dictionary(self.topics_saved)
+        self.messages_saved = create_messages_objects(self.messages)
 
         factory = APIRequestFactory()
         msg_view = MessageViewSet.as_view({'delete': 'destroy'})
