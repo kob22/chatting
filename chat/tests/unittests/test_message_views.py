@@ -28,11 +28,11 @@ def create_topics_obj():
 
 def create_messages_dictionary(topics_objects):
     messages = [{'id': 1, 'text': "Hot and sunny day", 'topic': topics_objects[0]},
-                {'id': 2, 'text': "Blue", 'topic': topics_objects[1]},
-                {'id': 3, 'text': "Python", 'topic': topics_objects[2]},
+                {'id': 2, 'text': "The best color is Blue", 'topic': topics_objects[1]},
+                {'id': 3, 'text': "The best language is Python", 'topic': topics_objects[2]},
                 {'id': 4, 'text': "Python and JavaScript", 'topic': topics_objects[3]},
-                {'id': 5, 'text': "Cold and snow", 'topic': topics_objects[0]},
-                {'id': 6, 'text': "Rainstorm", 'topic': topics_objects[0]}]
+                {'id': 5, 'text': "I think it will be cold and snow", 'topic': topics_objects[0]},
+                {'id': 6, 'text': "It will be a rainstorm", 'topic': topics_objects[0]}]
     return messages
 
 

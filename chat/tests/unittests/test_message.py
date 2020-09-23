@@ -4,6 +4,9 @@ from unittest import mock
 import pytz
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.core.exceptions import ValidationError as ValidationError_DJ
+
+from rest_framework.exceptions import ValidationError as ValidationError_RF
 
 from chat.models import Topic, Message
 from chat.serializers import MessageSerializer
@@ -39,6 +42,13 @@ class MessageModelTest(TestCase):
 
         with self.assertRaises(ValueError):
             msg = Message(text='Typical message', topic=self.topic)
+            msg.save()
+            msg.full_clean()
+
+    def test_create_message_too_short_text(self):
+
+        with self.assertRaisesMessage(ValidationError_DJ, 'Ensure this value has at least 10 characters (it has 9).'):
+            msg = Message(text='T'*9, topic=self.topic)
             msg.save()
             msg.full_clean()
 
@@ -126,3 +136,11 @@ class MessageSerializerTest(TestCase):
 
         msg = Message.objects.get(id=serializer.data['id'])
         self.assertEqual(msg.text, 'Updated message')
+
+    def test_message_text_too_short(self):
+        message_too_short_attr = {'id': 2, 'text': 'W'*9, 'topic': self.topic}
+        message_serialized = MessageSerializer(data=message_too_short_attr)
+
+        with self.assertRaisesMessage(ValidationError_RF, 'Ensure this value has at least 10 characters (it has 9).'):
+            message_serialized.is_valid(raise_exception=True)
+

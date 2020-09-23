@@ -2,8 +2,10 @@ import datetime
 from unittest import mock
 
 import pytz
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as ValidationError_DJ
 from django.test import TestCase
+
+from rest_framework.exceptions import ValidationError as ValidationError_RF
 
 from chat.models import Topic
 from chat.serializers import TopicSerializer
@@ -35,7 +37,7 @@ class TopicModelTest(TestCase):
 
     def test_too_short_title(self):
         topic = Topic(title='W' * 4)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError_DJ):
             topic.save()
             topic.full_clean()
 
@@ -48,7 +50,7 @@ class TopicModelTest(TestCase):
     def test_too_long_title(self):
         topic = Topic(title='n' * 256)
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError_DJ):
             topic.save()
             topic.full_clean()
 
@@ -86,3 +88,17 @@ class TopicSerializerTest(TestCase):
 
     def test_contains_correct_data(self):
         self.assertEqual(self.serializer.data, self.topic_serialized)
+
+    def test_topic_title_too_short(self):
+        topic_too_short_attr = {'id': 2, 'title': 'W'*4}
+        topic_serialized = TopicSerializer(data=topic_too_short_attr)
+
+        with self.assertRaisesMessage(ValidationError_RF, 'Ensure this field has at least 5 characters.'):
+            topic_serialized.is_valid(raise_exception=True)
+
+    def test_topic_title_too_long(self):
+        topic_too_long_attr = {'id': 2, 'title': 'W'*256}
+        topic_serialized = TopicSerializer(data=topic_too_long_attr)
+
+        with self.assertRaisesMessage(ValidationError_RF, 'Ensure this field has no more than 255 characters.'):
+            topic_serialized.is_valid(raise_exception=True)
